@@ -1,4 +1,4 @@
-use super::candle_patterns::CandlePatterns;
+//! Candle (OHLCV) data structure
 
 #[derive(Debug, Clone, Copy)]
 pub struct Candle {
@@ -19,7 +19,7 @@ impl Candle {
             volume,
         }
     }
-    
+
     pub fn get_open(&self) -> f64 {
         self.open
     }
@@ -39,18 +39,4 @@ impl Candle {
     pub fn get_volume(&self) -> f64 {
         self.volume
     }
-
-    // true reange from a candle is calculated by the following the commum formula
-    pub fn true_range(&self, candle_patterns: &CandlePatterns, index: usize) -> f64 {
-        if index == 0 {
-            return self.high - self.low;
-        }
-
-        let prev_close = candle_patterns.get_previous_close(index);
-        (self.high - self.low)
-            .max((self.high - prev_close).abs())
-            .max((self.low - prev_close).abs())
-    }
-
-    
 }

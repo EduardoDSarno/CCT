@@ -1,8 +1,12 @@
+//! Candlestick pattern detection (Doji, Hammer, Engulfing, etc.)
+//!
+//! This module will contain pattern recognition logic for common
+//! candlestick patterns used in technical analysis.
+
 use crate::indicators::candle::Candle;
 use crate::indicators::timeframe::Timeframe;
 
-const DEFAULT_ATR_RANGE: usize = 14;
-
+/// A collection of candles with associated timeframe for pattern detection
 pub struct CandlePatterns {
     candles: Vec<Candle>,
     timeframe: Timeframe,
@@ -13,7 +17,7 @@ impl CandlePatterns {
         Self { candles, timeframe }
     }
 
-    pub fn get_candles(&self) -> &Vec<Candle> {
+    pub fn get_candles(&self) -> &[Candle] {
         &self.candles
     }
 
@@ -21,31 +25,22 @@ impl CandlePatterns {
         self.timeframe
     }
 
-    pub fn get_candle(&self, index: usize) -> &Candle {
-        &self.candles[index]
+    pub fn get_candle(&self, index: usize) -> Option<&Candle> {
+        self.candles.get(index)
     }
 
-    // getting previous close from the last candle
-    pub fn get_previous_close(&self, index: usize) -> f64 {
-        self.get_candle(index - 1).get_close()
+    pub fn len(&self) -> usize {
+        self.candles.len()
     }
 
-    /// Calculates the Average True Range (ATR).
-    /// Pass `None` to use the default range of 14, or `Some(n)` for a custom range.
-    pub fn average_true_range(&self, range: Option<usize>) -> f64 {
-        let range = range.unwrap_or(DEFAULT_ATR_RANGE);
-
-        if range == 0 || self.candles.len() < range {
-            return 0.0;
-        }
-
-        let beginning_of_range = self.candles.len() - range;
-        let mut tr = 0.0;
-
-        for i in beginning_of_range..self.candles.len() {
-            tr += self.get_candle(i).true_range(self, i);
-        }
-
-        tr / range as f64
+    pub fn is_empty(&self) -> bool {
+        self.candles.is_empty()
     }
+
+    // TODO: Add candlestick pattern detection methods:
+    // - is_doji(index) -> bool
+    // - is_hammer(index) -> bool
+    // - is_engulfing(index) -> bool
+    // - is_morning_star(index) -> bool
+    // - etc.
 }

@@ -1,3 +1,3 @@
 fn main() {
-    tcc::run();
+    cct::run();
 }
