@@ -7,21 +7,19 @@ const DEFAULT_ATR_PERIOD: usize = 14;
 /// Calculates the True Range for a single candle.
 ///
 /// True Range is the greatest of:
-/// - Current High - Current Low
+/// - Current High - Current Low (candle range)
 /// - |Current High - Previous Close|
 /// - |Current Low - Previous Close|
 ///
-/// For the first candle (no previous close), returns High - Low.
+/// For the first candle (no previous close), returns the candle's range.
 pub fn true_range(candle: &Candle, prev_close: Option<f64>) -> f64 {
-    let high_low = candle.get_high() - candle.get_low();
-
     match prev_close {
         Some(prev) => {
             let high_prev = (candle.get_high() - prev).abs();
             let low_prev = (candle.get_low() - prev).abs();
-            high_low.max(high_prev).max(low_prev)
+            candle.range().max(high_prev).max(low_prev)
         }
-        None => high_low,
+        None => candle.range(),
     }
 }
 
@@ -59,22 +57,22 @@ mod tests {
 
     fn sample_candles() -> Vec<Candle> {
         vec![
-            Candle::new(100.0, 105.0, 95.0, 102.0, 1000.0),
-            Candle::new(102.0, 108.0, 100.0, 106.0, 1200.0),
-            Candle::new(106.0, 110.0, 104.0, 109.0, 1100.0),
+            Candle::new(0, 100.0, 105.0, 95.0, 102.0, 1000.0),
+            Candle::new(0, 102.0, 108.0, 100.0, 106.0, 1200.0),
+            Candle::new(0, 106.0, 110.0, 104.0, 109.0, 1100.0),
         ]
     }
 
     #[test]
     fn test_true_range_no_previous() {
-        let candle = Candle::new(100.0, 110.0, 95.0, 105.0, 1000.0);
+        let candle = Candle::new(0, 100.0, 110.0, 95.0, 105.0, 1000.0);
         let tr = true_range(&candle, None);
         assert_eq!(tr, 15.0); // 110 - 95
     }
 
     #[test]
     fn test_true_range_with_previous() {
-        let candle = Candle::new(100.0, 110.0, 95.0, 105.0, 1000.0);
+        let candle = Candle::new(0, 100.0, 110.0, 95.0, 105.0, 1000.0);
         let tr = true_range(&candle, Some(90.0));
         assert_eq!(tr, 20.0); // max(15, |110-90|, |95-90|) = 20
     }
