@@ -154,11 +154,12 @@ pub use exchange::{ExchangeClient, ExchangeParser, new_exchange_client};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::indicators::timeframe::Timeframe;
 
     #[test]
     fn test_format_subscribe_candles() {
         let parser = ExchangeParser::new();
-        let stream = Stream::candles("BTCUSDT", "1m");
+        let stream = Stream::candles("BTCUSDT", Timeframe::M1);
         let msg = parser.format_subscribe(&stream);
         
         // Assert expected format

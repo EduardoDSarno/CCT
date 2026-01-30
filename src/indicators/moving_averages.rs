@@ -7,10 +7,10 @@ use crate::indicators::candle::Candle;
 /// SMA = (C1 + C2 + ... + Cn) / n
 ///
 /// Uses the closing prices of the most recent `period` candles.
-/// Returns `0.0` if there are not enough candles for the given period.
-pub fn sma(candles: &[Candle], period: usize) -> f64 {
+/// Returns `None` if there are not enough candles for the given period.
+pub fn sma(candles: &[Candle], period: usize) -> Option<f64> {
     if period == 0 || candles.len() < period {
-        return 0.0;
+        return None;
     }
 
     let start_index = candles.len() - period;
@@ -19,7 +19,7 @@ pub fn sma(candles: &[Candle], period: usize) -> f64 {
         .map(|c| c.get_close())
         .sum();
 
-    sum / period as f64
+    Some(sum / period as f64)
 }
 
 /// Calculates the Exponential Moving Average (EMA) over a slice of candles.
@@ -29,10 +29,10 @@ pub fn sma(candles: &[Candle], period: usize) -> f64 {
 /// where multiplier = 2 / (period + 1)
 ///
 /// The first EMA value is seeded with the SMA of the first `period` candles.
-/// Returns `0.0` if there are not enough candles for the given period.
-pub fn ema(candles: &[Candle], period: usize) -> f64 {
+/// Returns `None` if there are not enough candles for the given period.
+pub fn ema(candles: &[Candle], period: usize) -> Option<f64> {
     let series = ema_series(candles, period);
-    series.last().copied().unwrap_or(0.0)
+    series.last().copied()
 }
 
 /// Calculates the full EMA series for all candles.
@@ -127,7 +127,7 @@ mod tests {
     fn test_sma_basic() {
         let candles = sample_candles();
         // SMA of last 3 candles: (12 + 13 + 14) / 3 = 13.0
-        let result = sma(&candles, 3);
+        let result = sma(&candles, 3).unwrap();
         assert_eq!(result, 13.0);
     }
 
@@ -135,7 +135,7 @@ mod tests {
     fn test_sma_full_period() {
         let candles = sample_candles();
         // SMA of all 5 candles: (10 + 11 + 12 + 13 + 14) / 5 = 12.0
-        let result = sma(&candles, 5);
+        let result = sma(&candles, 5).unwrap();
         assert_eq!(result, 12.0);
     }
 
@@ -143,20 +143,20 @@ mod tests {
     fn test_sma_insufficient_candles() {
         let candles = sample_candles();
         let result = sma(&candles, 10);
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
     fn test_sma_zero_period() {
         let candles = sample_candles();
         let result = sma(&candles, 0);
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
     fn test_ema_basic() {
         let candles = sample_candles();
-        let result = ema(&candles, 3);
+        let result = ema(&candles, 3).unwrap();
         // EMA should be calculable and positive
         assert!(result > 0.0);
     }
@@ -165,14 +165,14 @@ mod tests {
     fn test_ema_insufficient_candles() {
         let candles = sample_candles();
         let result = ema(&candles, 10);
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
     fn test_ema_weights_recent_more() {
         let candles = trending_up_candles();
-        let sma_val = sma(&candles, 5);
-        let ema_val = ema(&candles, 5);
+        let sma_val = sma(&candles, 5).unwrap();
+        let ema_val = ema(&candles, 5).unwrap();
 
         // In an uptrend, EMA should be higher than SMA because it weights recent prices more
         assert!(

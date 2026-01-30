@@ -69,12 +69,13 @@ Exchange WebSocket
 ## Usage Example
 
 ```rust
+use crate::indicators::timeframe::Timeframe;
 use crate::market::{MarketData, Stream, new_binance_client};
 
 let mut client = new_binance_client();
 let rx = client.connect().await?;
 
-client.subscribe(Stream::candles("BTCUSDT", "1m")).await?;
+client.subscribe(Stream::candles("BTCUSDT", Timeframe::M1)).await?;
 client.subscribe(Stream::trades("BTCUSDT")).await?;
 
 while let Some(data) = rx.recv().await {

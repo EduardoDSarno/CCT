@@ -35,7 +35,7 @@ The unified enum that carries all market data through a single channel:
 
 ```rust
 pub enum MarketData {
-    Candle { symbol, interval, data: Candle, is_closed },
+    Candle { symbol, interval: Timeframe, data: Candle, is_closed },
     Trade(Trade),
     OrderBook(OrderBookUpdate),
     Funding(FundingRate),

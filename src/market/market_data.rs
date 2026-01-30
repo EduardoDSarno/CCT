@@ -2,15 +2,13 @@
 //! See docs/market/MARKET_DATA.md for detailed documentation.
 
 use crate::indicators::candle::Candle;
+use crate::indicators::timeframe::Timeframe;
 
-// =============================================================================
-// Design Decision: Exchange-Specific Fields
-// =============================================================================
+
 // Fields use Option<T> when only some exchanges provide them.
 // This allows adding new exchanges without breaking existing code - just set
 // exchange-specific fields to None when not available.
 // Examples: is_buyer_maker (Binance), num_orders (Hyperliquid), sequence (varies)
-// =============================================================================
 
 /// Side of a trade (buyer or seller initiated).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -197,7 +195,7 @@ pub enum MarketData {
     /// WARNING: If is_closed=false, candle is still updating - don't use for calculations yet.
     Candle {
         symbol: String,    // streaming context, not needed for indicator calculations
-        interval: String,  // streaming context, not needed for indicator calculations
+        interval: Timeframe,  // streaming context, not needed for indicator calculations
         data: Candle,      // the actual calculation primitive
         is_closed: bool,   // IMPORTANT: only use for calculations when true
     },
@@ -233,14 +231,14 @@ impl MarketData {
         matches!(self, MarketData::Funding(_))
     }
 
-    pub fn as_candle(&self) -> Option<(&str, &str, &Candle, bool)> {
+    pub fn as_candle(&self) -> Option<(&str, Timeframe, &Candle, bool)> {
         match self {
             MarketData::Candle {
                 symbol,
                 interval,
                 data,
                 is_closed,
-            } => Some((symbol, interval, data, *is_closed)),
+            } => Some((symbol, *interval, data, *is_closed)),
             _ => None,
         }
     }
@@ -341,7 +339,7 @@ mod tests {
         let candle = Candle::new(0, 100.0, 110.0, 90.0, 105.0, 1000.0);
         let md_candle = MarketData::Candle {
             symbol: "BTCUSDT".to_string(),
-            interval: "1m".to_string(),
+            interval: Timeframe::M1,
             data: candle,
             is_closed: true,
         };
@@ -357,7 +355,7 @@ mod tests {
         let candle = Candle::new(0, 100.0, 110.0, 90.0, 105.0, 1000.0);
         let md = MarketData::Candle {
             symbol: "BTCUSDT".to_string(),
-            interval: "1m".to_string(),
+            interval: Timeframe::M1,
             data: candle,
             is_closed: true,
         };
@@ -373,14 +371,14 @@ mod tests {
         let candle = Candle::new(1000, 100.0, 110.0, 90.0, 105.0, 1000.0);
         let md = MarketData::Candle {
             symbol: "BTCUSDT".to_string(),
-            interval: "5m".to_string(),
+            interval: Timeframe::M5,
             data: candle,
             is_closed: false,
         };
 
         let (symbol, interval, data, is_closed) = md.as_candle().unwrap();
         assert_eq!(symbol, "BTCUSDT");
-        assert_eq!(interval, "5m");
+        assert_eq!(interval, Timeframe::M5);
         assert_eq!(data.get_open(), 100.0);
         assert!(!is_closed);
     }

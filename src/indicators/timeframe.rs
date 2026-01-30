@@ -44,10 +44,33 @@ impl Timeframe {
             Timeframe::W1 => "1w",
         }
     }
+
+    /// Parses a timeframe string like "1m", "5m", "1h".
+    pub fn from_str(value: &str) -> Option<Self> {
+        value.parse().ok()
+    }
 }
 
 impl std::fmt::Display for Timeframe {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
+    }
+}
+
+impl std::str::FromStr for Timeframe {
+    type Err = ();
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "1m" => Ok(Timeframe::M1),
+            "5m" => Ok(Timeframe::M5),
+            "15m" => Ok(Timeframe::M15),
+            "30m" => Ok(Timeframe::M30),
+            "1h" => Ok(Timeframe::H1),
+            "4h" => Ok(Timeframe::H4),
+            "1d" => Ok(Timeframe::D1),
+            "1w" => Ok(Timeframe::W1),
+            _ => Err(()),
+        }
     }
 }

@@ -28,6 +28,10 @@ impl Candle {
         close: f64,
         volume: f64,
     ) -> Self {
+        debug_assert!(high >= low, "candle high must be >= low");
+        debug_assert!(open >= low && open <= high, "candle open must be within [low, high]");
+        debug_assert!(close >= low && close <= high, "candle close must be within [low, high]");
+
         Self {
             timestamp,
             open,

@@ -28,12 +28,12 @@ pub fn true_range(candle: &Candle, prev_close: Option<f64>) -> f64 {
 /// ATR measures market volatility by averaging True Range values.
 /// Pass `None` to use the default period of 14, or `Some(n)` for a custom period.
 ///
-/// Returns `0.0` if there are not enough candles for the given period.
-pub fn atr(candles: &[Candle], period: Option<usize>) -> f64 {
+/// Returns `None` if there are not enough candles for the given period.
+pub fn atr(candles: &[Candle], period: Option<usize>) -> Option<f64> {
     let period = period.unwrap_or(DEFAULT_ATR_PERIOD);
 
     if period == 0 || candles.len() < period {
-        return 0.0;
+        return None;
     }
 
     let start_index = candles.len() - period;
@@ -48,7 +48,7 @@ pub fn atr(candles: &[Candle], period: Option<usize>) -> f64 {
         total_tr += true_range(&candles[i], prev_close);
     }
 
-    total_tr / period as f64
+    Some(total_tr / period as f64)
 }
 
 #[cfg(test)]
@@ -81,13 +81,13 @@ mod tests {
     fn test_atr_insufficient_candles() {
         let candles = sample_candles();
         let result = atr(&candles, Some(5));
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
     fn test_atr_with_enough_candles() {
         let candles = sample_candles();
-        let result = atr(&candles, Some(3));
+        let result = atr(&candles, Some(3)).unwrap();
         assert!(result > 0.0);
     }
 }

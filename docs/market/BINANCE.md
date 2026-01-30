@@ -118,12 +118,13 @@ Our parser converts this to `TradeSide::Buy` or `TradeSide::Sell` for consistenc
 ## Usage
 
 ```rust
+use crate::indicators::timeframe::Timeframe;
 use crate::market::{new_binance_client, Stream, MarketData};
 
 let mut client = new_binance_client();
 let rx = client.connect().await?;
 
-client.subscribe(Stream::candles("BTCUSDT", "1m")).await?;
+client.subscribe(Stream::candles("BTCUSDT", Timeframe::M1)).await?;
 client.subscribe(Stream::trades("BTCUSDT")).await?;
 
 while let Some(data) = rx.recv().await {

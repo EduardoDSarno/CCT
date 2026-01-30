@@ -13,7 +13,8 @@
 use crate::indicators::candle::Candle;
 use crate::indicators::timeframe::Timeframe;
 
-/// A collection of candles with associated timeframe for pattern detection
+/// A collection of candles with associated timeframe for pattern detection.
+/// The timeframe is metadata for callers; pattern logic uses only candle data.
 pub struct CandlePatterns {
     candles: Vec<Candle>,
     timeframe: Timeframe,

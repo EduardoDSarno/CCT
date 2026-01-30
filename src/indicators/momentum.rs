@@ -17,33 +17,9 @@ const DEFAULT_RSI_PERIOD: usize = 14;
 /// - RSI < 30: Oversold (potential buy signal)
 ///
 /// Pass `None` to use the default period of 14, or `Some(n)` for a custom period.
-/// Returns `0.0` if there are not enough candles (need at least period + 1 candles).
-pub fn rsi(candles: &[Candle], period: Option<usize>) -> f64 {
-    let period = period.unwrap_or(DEFAULT_RSI_PERIOD);
-
-    // Need at least period + 1 candles to calculate `period` price changes
-    if period == 0 || candles.len() < period + 1 {
-        return 0.0;
-    }
-
-    let changes = price_changes(candles);
-    let (gains, losses) = gains_and_losses(&changes);
-
-    // Use the most recent `period` gains/losses
-    let start_index = gains.len().saturating_sub(period);
-    let recent_gains = &gains[start_index..];
-    let recent_losses = &losses[start_index..];
-
-    let avg_gain: f64 = recent_gains.iter().sum::<f64>() / period as f64;
-    let avg_loss: f64 = recent_losses.iter().sum::<f64>() / period as f64;
-
-    if avg_loss == 0.0 {
-        // No losses means RSI is 100 (maximum bullish)
-        return 100.0;
-    }
-
-    let rs = avg_gain / avg_loss;
-    100.0 - (100.0 / (1.0 + rs))
+/// Returns `None` if there are not enough candles (need at least period + 1 candles).
+pub fn rsi(candles: &[Candle], period: Option<usize>) -> Option<f64> {
+    rsi_series(candles, period).last().copied()
 }
 
 /// Calculates the RSI series for all calculable points.
@@ -192,7 +168,7 @@ mod tests {
     #[test]
     fn test_rsi_overbought() {
         let candles = uptrend_candles();
-        let result = rsi(&candles, Some(14));
+        let result = rsi(&candles, Some(14)).unwrap();
         // Strong uptrend should result in RSI > 70 (overbought)
         assert!(
             result > 70.0,
@@ -204,7 +180,7 @@ mod tests {
     #[test]
     fn test_rsi_oversold() {
         let candles = downtrend_candles();
-        let result = rsi(&candles, Some(14));
+        let result = rsi(&candles, Some(14)).unwrap();
         // Strong downtrend should result in RSI < 30 (oversold)
         assert!(
             result < 30.0,
@@ -216,7 +192,7 @@ mod tests {
     #[test]
     fn test_rsi_neutral() {
         let candles = sideways_candles();
-        let result = rsi(&candles, Some(14));
+        let result = rsi(&candles, Some(14)).unwrap();
         // Sideways movement should result in RSI around 50
         assert!(
             result > 30.0 && result < 70.0,
@@ -232,14 +208,14 @@ mod tests {
             Candle::new(0, 102.0, 108.0, 100.0, 106.0, 1000.0),
         ];
         let result = rsi(&candles, Some(14));
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
     fn test_rsi_zero_period() {
         let candles = uptrend_candles();
         let result = rsi(&candles, Some(0));
-        assert_eq!(result, 0.0);
+        assert!(result.is_none());
     }
 
     #[test]
@@ -285,11 +261,11 @@ mod tests {
     fn test_rsi_bounds() {
         // RSI should always be between 0 and 100
         let candles = uptrend_candles();
-        let result = rsi(&candles, Some(14));
+        let result = rsi(&candles, Some(14)).unwrap();
         assert!(result >= 0.0 && result <= 100.0);
 
         let candles = downtrend_candles();
-        let result = rsi(&candles, Some(14));
+        let result = rsi(&candles, Some(14)).unwrap();
         assert!(result >= 0.0 && result <= 100.0);
     }
 }
